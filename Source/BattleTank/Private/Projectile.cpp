@@ -52,10 +52,19 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 	ExplosionForce->FireImpulse();
 
 	SetRootComponent(ImpactBlast);
+
+	UGameplayStatics::ApplyRadialDamage(
+		this,
+		ProjectileDamage,
+		GetActorLocation(),
+		ExplosionForce->Radius,
+		UDamageType::StaticClass(),
+		TArray<AActor*>() // damage all actors
+	);
 	
+
 	FTimerHandle Timer;
-	GetWorld()->GetTimerManager().SetTimer(
-		Timer, this, &AProjectile::Destroy, DestroyDelay, false);
+	GetWorld()->GetTimerManager().SetTimer(Timer, this, &AProjectile::Destroy, DestroyDelay, false);
 }
 
 void AProjectile::Destroy()
