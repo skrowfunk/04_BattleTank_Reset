@@ -21,5 +21,10 @@ protected:
 private:
 	virtual void BeginPlay() override;
 
+	virtual void SetPawn(APawn* InPawn) override; // This is the method that's being called when a tank is possessed
+
 	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION()
+	void OnPossessedTankDeath();
 };
