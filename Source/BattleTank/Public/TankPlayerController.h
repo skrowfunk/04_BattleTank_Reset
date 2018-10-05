@@ -6,6 +6,7 @@
 #include "TankPlayerController.generated.h" // Must be the last include
 
 class UTankTankAimingComponent;
+class ATank;
 
 /**
  * Responsible for helping the player aim.
@@ -20,6 +21,8 @@ protected:
 	void FoundAimingComponent(UTankAimingComponent* AimCompRef);
 
 private:
+	ATank* PossessedTank = nullptr;
+
 	virtual void BeginPlay() override;
 
 	virtual void Tick( float DeltaTime ) override;
@@ -42,4 +45,9 @@ private:
 
 	bool GetLookDirection(FVector2D ScreenLocation, FVector& LookDirection) const;
 	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation) const;
+
+	virtual void SetPawn(APawn* InPawn) override; // This is the method that's being called when a tank is possessed
+
+	UFUNCTION()
+	void OnPossessedTankDeath();	
 };
