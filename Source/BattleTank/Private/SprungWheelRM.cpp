@@ -10,6 +10,7 @@ ASprungWheelRM::ASprungWheelRM()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickGroup = TG_PostPhysics;
 
 	MassWheelConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(FName("MassWheelConstraint"));
 	SetRootComponent(MassWheelConstraint);
@@ -29,43 +30,10 @@ void ASprungWheelRM::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (GetRootComponent())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("(RM) GetRootComponent: %s"), *GetRootComponent()->GetName());
-
-		if (GetRootComponent()->GetAttachParent())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("(RM) GetAttachParent: %s"), *GetRootComponent()->GetAttachParent()->GetName());
-
-			if (GetRootComponent()->GetAttachParent()->GetOwner())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("(RM) GetOwner: %s"), *GetRootComponent()->GetAttachParent()->GetOwner()->GetName());
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("(RM) GetOwner is Null"));
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("(RM) GetAttachParent is Null"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("(RM) GetRootComponent is Null"));
-	}
+	Wheel->SetNotifyRigidBodyCollision(true);
+	Wheel->OnComponentHit.AddDynamic(this, &ASprungWheelRM::OnHit);
 
 	SetupConstraint();
-
-	if (GetAttachParentActor())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("(RM) Not Null: %s"), *GetAttachParentActor()->GetName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("(RM) Null"));
-	}
 }
 
 void ASprungWheelRM::SetupConstraint()
@@ -90,10 +58,27 @@ void ASprungWheelRM::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (GetWorld()->TickGroup == TG_PostPhysics)
+	{
+		TotalForceMagnitudeThisFrame = 0;
+	}
+
 }
 
 void ASprungWheelRM::AddDrivingForce(float ForceMagnitude)
 {
-	Wheel->AddForce(Axle->GetForwardVector() * ForceMagnitude);
+	TotalForceMagnitudeThisFrame += ForceMagnitude;
+	//TotalForceMagnitudeThisFrame = ForceMagnitude;
+	UE_LOG(LogTemp, Warning, TEXT("Force This Frame %f"), TotalForceMagnitudeThisFrame);
+}
+
+void ASprungWheelRM::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	ApplyForce();
+}
+
+void ASprungWheelRM::ApplyForce()
+{
+	Wheel->AddForce(Axle->GetForwardVector() * TotalForceMagnitudeThisFrame);
 }
 
